@@ -8,7 +8,7 @@
 
 import Foundation
 
-class Network: NSObject, URLSessionTaskDelegate {
+class Network {
     static let shared = Network()
 
     enum NetworkError: Error {
@@ -26,12 +26,7 @@ class Network: NSObject, URLSessionTaskDelegate {
     /**
      The session that the app uses. Since it uses delegate: self, it must be declared lazy. You should never change this.
      */
-    lazy var session: URLSession = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
-
-    /**
-     Stores the options for each task if necessary. Since dictionaries are not thread safe, we need to wrap this.
-     */
-//    let taskOptions = ThreadSafe([URLSessionTask: RequestOptions]())
+    let session = URLSession()
 
     // MARK: - API
 
@@ -41,8 +36,6 @@ class Network: NSObject, URLSessionTaskDelegate {
      For instance:
 
      ```Network.shared.send(request) { result: Result<MyModel, Error> in ```
-
-     See also `sendRPC` in Network+RPC.swifts
      */
     @discardableResult
     func send<T: Model>(_ request: Requestable, completion: @escaping (Result<T, Error>)->Void) -> NetworkTask {
@@ -58,22 +51,7 @@ class Network: NSObject, URLSessionTaskDelegate {
      */
     @discardableResult
     func send<T: DataConvertible>(_ request: Requestable,
-                                         completion: @escaping (Result<T, Error>)->Void) -> NetworkTask {
-        return send(request) { (result: Result<T, Error>, _) in
-            completion(result)
-        }
-    }
-
-    /**
-     Send a request and return anything which is DataConvertible. See DataConvertible.swift for a full list of types.
-
-     This function also returns an HTTPURLResponse if it was received.
-
-     If you don't care about what's returned, you should expect: Result<Empty, Error>.
-     */
-    @discardableResult
-    func send<T: DataConvertible>(_ request: Requestable,
-                                         completion: @escaping (Result<T, Error>, HTTPURLResponse?)->Void) -> NetworkTask {
+                                  completion: @escaping (Result<T, Error>)->Void) -> NetworkTask {
         return send(request,
                     taskCreator: { urlRequest, completion in self.session.dataTask(with: urlRequest,
                                                                                    completionHandler: completion) },
@@ -86,24 +64,9 @@ class Network: NSObject, URLSessionTaskDelegate {
      */
     @discardableResult
     func download(_ request: Requestable,
-                         destination: URL,
-                         unzip: Bool = false,
-                         completion: @escaping (Result<Void, Error>)->Void) -> NetworkTask {
-        return download(request, destination: destination, unzip: unzip) { (result, _) in
-            completion(result)
-        }
-    }
-
-    /**
-     Downloads a file directly to disk and saves it at the location specified.
-
-     This function also returns an HTTPURLResponse if it was received.
-     */
-    @discardableResult
-    func download(_ request: Requestable,
-                         destination: URL,
-                         unzip: Bool = false,
-                         completion: @escaping (Result<Void, Error>, HTTPURLResponse?)->Void) -> NetworkTask {
+                  destination: URL,
+                  unzip: Bool = false,
+                  completion: @escaping (Result<Void, Error>)->Void) -> NetworkTask {
         return send(request,
                     taskCreator: { urlRequest, completion in self.session.downloadTask(with: urlRequest,
                                                                                        completionHandler: completion) },
@@ -122,7 +85,7 @@ class Network: NSObject, URLSessionTaskDelegate {
     private func send<DataType, ReturnType>(_ request: Requestable,
                                             taskCreator: @escaping ((URLRequest, @escaping (DataType?, URLResponse?, Error?)->Void)->URLSessionTask),
                                             dataConvertor: @escaping (DataType) throws -> ReturnType,
-                                            completion: @escaping (Result<ReturnType, Error>, HTTPURLResponse?)->Void) -> NetworkTask {
+                                            completion: @escaping (Result<ReturnType, Error>)->Void) -> NetworkTask {
         // Create a network task to immediately return
         let networkTask = NetworkTask()
 
@@ -130,7 +93,8 @@ class Network: NSObject, URLSessionTaskDelegate {
         DispatchQueue.global(qos: .userInitiated).async {
             let urlRequest = request.urlRequest()
 
-            Log.verbose("Send: \(urlRequest.url?.absoluteString ?? "") - \(urlRequest.httpMethod ?? "")")
+            let urlToLog = urlRequest.url?.absoluteString ?? ""
+            Log.verbose("Send: \(urlToLog) - \(urlRequest.httpMethod ?? "")")
 
             let task = taskCreator(urlRequest) { data, response, error in
                 let result: Result<ReturnType, Error>
@@ -151,7 +115,6 @@ class Network: NSObject, URLSessionTaskDelegate {
                     result = .failure(NetworkError.noDataOrError)
                 }
 
-                let urlToLog = urlRequest.url?.absoluteString ?? ""
                 if case let .failure(error) = result {
                     Log.error("Request failed: \(urlToLog) - \(error)")
                 } else {
@@ -159,13 +122,9 @@ class Network: NSObject, URLSessionTaskDelegate {
                 }
 
                 DispatchQueue.main.async {
-                    completion(result, response as? HTTPURLResponse)
+                    completion(result)
                 }
             }
-
-//            if let options = request.requestOptions() {
-//                self.taskOptions.access { $0[task] = options }
-//            }
 
             task.resume()
 
@@ -186,10 +145,7 @@ class Network: NSObject, URLSessionTaskDelegate {
         }
 
         let statusCode = response.statusCode
-
-        let followRedirects = request.requestOptions()?.followRedirects ?? false
-        let maxStatusCode = followRedirects ? 299 : 399
-        if statusCode >= 200 && statusCode <= maxStatusCode {
+        if statusCode >= 200 && statusCode <= 299 {
             return nil
         } else {
             Log.error("Invalid status code from \(response.url?.absoluteString ?? "unknown"): \(statusCode)")
@@ -208,15 +164,4 @@ class Network: NSObject, URLSessionTaskDelegate {
 
         try fileManager.moveItem(at: origin, to: destination)
     }
-
-    // MARK: - Session Delegate
-
-//    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
-//        let shouldRedirect = taskOptions.access { return $0[task]?.followRedirects ?? true }
-//        completionHandler(shouldRedirect ? request : nil)
-//    }
-//
-//    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-//        taskOptions.access { $0[task] = nil }
-//    }
 }

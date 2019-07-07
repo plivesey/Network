@@ -8,7 +8,7 @@
 
 import Foundation
 
-class SimpleNetwork: NSObject, URLSessionTaskDelegate {
+class SimpleNetwork {
     static let shared = SimpleNetwork()
 
     enum NetworkError: Error {
@@ -59,7 +59,7 @@ class SimpleNetwork: NSObject, URLSessionTaskDelegate {
                     do {
                         let decoder = JSONDecoder()
                         result = .success(try decoder.decode(T.self, from: data))
-                    } catch let error {
+                    } catch {
                         result = .failure(error)
                     }
                 } else {
