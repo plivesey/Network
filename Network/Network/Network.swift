@@ -40,13 +40,13 @@ class Network: NSObject, URLSessionTaskDelegate {
 
      For instance:
 
-     ```Network.shared.send(request) { result: Result<MyModel, NSError> in ```
+     ```Network.shared.send(request) { result: Result<MyModel, Error> in ```
 
      See also `sendRPC` in Network+RPC.swifts
      */
     @discardableResult
-    func send<T: Model>(_ request: Requestable, completion: @escaping (Result<T, NSError>)->Void) -> NetworkTask {
-        return send(request) { (result: Result<DecodableConvertible<T>, NSError>) in
+    func send<T: Model>(_ request: Requestable, completion: @escaping (Result<T, Error>)->Void) -> NetworkTask {
+        return send(request) { (result: Result<DecodableConvertible<T>, Error>) in
             completion(result.map { $0.model })
         }
     }
@@ -54,12 +54,12 @@ class Network: NSObject, URLSessionTaskDelegate {
     /**
      Send a request and return anything which is DataConvertible. See DataConvertible.swift for a full list of types.
 
-     If you don't care about what's returned, you should expect: Result<Empty, NSError>.
+     If you don't care about what's returned, you should expect: Result<Empty, Error>.
      */
     @discardableResult
     func send<T: DataConvertible>(_ request: Requestable,
-                                         completion: @escaping (Result<T, NSError>)->Void) -> NetworkTask {
-        return send(request) { (result: Result<T, NSError>, _) in
+                                         completion: @escaping (Result<T, Error>)->Void) -> NetworkTask {
+        return send(request) { (result: Result<T, Error>, _) in
             completion(result)
         }
     }
@@ -69,11 +69,11 @@ class Network: NSObject, URLSessionTaskDelegate {
 
      This function also returns an HTTPURLResponse if it was received.
 
-     If you don't care about what's returned, you should expect: Result<Empty, NSError>.
+     If you don't care about what's returned, you should expect: Result<Empty, Error>.
      */
     @discardableResult
     func send<T: DataConvertible>(_ request: Requestable,
-                                         completion: @escaping (Result<T, NSError>, HTTPURLResponse?)->Void) -> NetworkTask {
+                                         completion: @escaping (Result<T, Error>, HTTPURLResponse?)->Void) -> NetworkTask {
         return send(request,
                     taskCreator: { urlRequest, completion in self.session.dataTask(with: urlRequest,
                                                                                    completionHandler: completion) },
@@ -88,7 +88,7 @@ class Network: NSObject, URLSessionTaskDelegate {
     func download(_ request: Requestable,
                          destination: URL,
                          unzip: Bool = false,
-                         completion: @escaping (Result<Void, NSError>)->Void) -> NetworkTask {
+                         completion: @escaping (Result<Void, Error>)->Void) -> NetworkTask {
         return download(request, destination: destination, unzip: unzip) { (result, _) in
             completion(result)
         }
@@ -103,7 +103,7 @@ class Network: NSObject, URLSessionTaskDelegate {
     func download(_ request: Requestable,
                          destination: URL,
                          unzip: Bool = false,
-                         completion: @escaping (Result<Void, NSError>, HTTPURLResponse?)->Void) -> NetworkTask {
+                         completion: @escaping (Result<Void, Error>, HTTPURLResponse?)->Void) -> NetworkTask {
         return send(request,
                     taskCreator: { urlRequest, completion in self.session.downloadTask(with: urlRequest,
                                                                                        completionHandler: completion) },
@@ -122,7 +122,7 @@ class Network: NSObject, URLSessionTaskDelegate {
     private func send<DataType, ReturnType>(_ request: Requestable,
                                             taskCreator: @escaping ((URLRequest, @escaping (DataType?, URLResponse?, Error?)->Void)->URLSessionTask),
                                             dataConvertor: @escaping (DataType) throws -> ReturnType,
-                                            completion: @escaping (Result<ReturnType, NSError>, HTTPURLResponse?)->Void) -> NetworkTask {
+                                            completion: @escaping (Result<ReturnType, Error>, HTTPURLResponse?)->Void) -> NetworkTask {
         // Create a network task to immediately return
         let networkTask = NetworkTask()
 
@@ -133,10 +133,10 @@ class Network: NSObject, URLSessionTaskDelegate {
             Log.verbose("Send: \(urlRequest.url?.absoluteString ?? "") - \(urlRequest.httpMethod ?? "")")
 
             let task = taskCreator(urlRequest) { data, response, error in
-                let result: Result<ReturnType, NSError>
+                let result: Result<ReturnType, Error>
 
                 if let error = error {
-                    result = .failure(error as NSError)
+                    result = .failure(error)
                 } else if let error = self.error(from: response, with: request) {
                     result = .failure(error)
                 } else if let data = data {
@@ -144,11 +144,11 @@ class Network: NSObject, URLSessionTaskDelegate {
                         let returnType = try dataConvertor(data)
                         result = .success(returnType)
                     } catch let error {
-                        result = .failure(error as NSError)
+                        result = .failure(error)
                     }
                 } else {
                     Log.assertFailure("Missing both data and error from NSURLSession. This should never happen.")
-                    result = .failure(NetworkError.noDataOrError as NSError)
+                    result = .failure(NetworkError.noDataOrError)
                 }
 
                 let urlToLog = urlRequest.url?.absoluteString ?? ""
@@ -179,11 +179,7 @@ class Network: NSObject, URLSessionTaskDelegate {
 
     // MARK: Helpers
 
-    func networkError(withMessage message: String, code: Int) -> NSError {
-        return NSError(domain: "com.aspen.network", code: code, userInfo: [NSLocalizedDescriptionKey: message])
-    }
-
-    private func error(from response: URLResponse?, with request: Requestable) -> NSError? {
+    private func error(from response: URLResponse?, with request: Requestable) -> Error? {
         guard let response = response as? HTTPURLResponse else {
             Log.assertFailure("Missing http response when trying to parse a status code.")
             return nil
@@ -197,7 +193,7 @@ class Network: NSObject, URLSessionTaskDelegate {
             return nil
         } else {
             Log.error("Invalid status code from \(response.url?.absoluteString ?? "unknown"): \(statusCode)")
-            return StatusCodeError(code: statusCode) as NSError
+            return StatusCodeError(code: statusCode)
         }
     }
 

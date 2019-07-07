@@ -45,17 +45,22 @@ struct RequestOptions {
  A simple request with no post data.
  */
 struct Request: Requestable {
-    let url: URL
+    let path: String
     let method: String
     let options: RequestOptions?
 
-    init(url: URL, method: String = "GET", options: RequestOptions? = nil) {
-        self.url = url
+    init(path: String, method: String = "GET", options: RequestOptions? = nil) {
+        self.path = path
         self.method = method
         self.options = options
     }
 
     func urlRequest() -> URLRequest {
+        guard let url = URL(string: "https://jsonplaceholder.typicode.com")?.appendingPathComponent(path) else {
+            Log.assertFailure("Failed to create base url")
+            return URLRequest(url: URL(fileURLWithPath: ""))
+        }
+
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = method
 
@@ -71,11 +76,16 @@ struct Request: Requestable {
  A request which includes post data. This should be the form of an encodeable model.
  */
 struct PostRequest<Model: Encodable>: Requestable {
-    let url: URL
+    let path: String
     let method: String
     let model: Model
 
     func urlRequest() -> URLRequest {
+        guard let url = URL(string: "https://jsonplaceholder.typicode.com")?.appendingPathComponent(path) else {
+            Log.assertFailure("Failed to create base url")
+            return URLRequest(url: URL(fileURLWithPath: ""))
+        }
+
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = method
 

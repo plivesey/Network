@@ -1,21 +1,65 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="13142" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12042"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
-        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ViewController" customModuleProvider="target">
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ViewController" customModule="Network" customModuleProvider="target">
             <connections>
+                <outlet property="label" destination="qdz-QJ-IVO" id="Aio-1q-C9x"/>
                 <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
             </connections>
         </placeholder>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
         <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
-            <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+            <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Zjy-Zg-7rF">
+                    <rect key="frame" x="20" y="144" width="374" height="50"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="50" id="1il-Di-MKr"/>
+                    </constraints>
+                    <state key="normal" title="Send GET Request"/>
+                    <connections>
+                        <action selector="sendGETRequest" destination="-1" eventType="touchUpInside" id="b4w-9G-Gn8"/>
+                    </connections>
+                </button>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gce-A7-jVe">
+                    <rect key="frame" x="20" y="234" width="374" height="50"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="50" id="Pk4-Cz-BG3"/>
+                    </constraints>
+                    <state key="normal" title="Send POST Request"/>
+                    <connections>
+                        <action selector="sendPOSTRequest" destination="-1" eventType="touchUpInside" id="Kro-aJ-sJd"/>
+                    </connections>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qdz-QJ-IVO">
+                    <rect key="frame" x="20" y="324" width="374" height="0.0"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+            </subviews>
             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <constraints>
+                <constraint firstItem="Zjy-Zg-7rF" firstAttribute="top" secondItem="fnl-2z-Ty3" secondAttribute="top" constant="100" id="0Fs-TJ-rpO"/>
+                <constraint firstItem="qdz-QJ-IVO" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" constant="20" id="FXz-pZ-iPI"/>
+                <constraint firstItem="qdz-QJ-IVO" firstAttribute="top" secondItem="gce-A7-jVe" secondAttribute="bottom" constant="40" id="IAa-xq-guv"/>
+                <constraint firstItem="Zjy-Zg-7rF" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" constant="20" id="REk-oT-Zd9"/>
+                <constraint firstItem="fnl-2z-Ty3" firstAttribute="trailing" secondItem="qdz-QJ-IVO" secondAttribute="trailing" constant="20" id="SoC-Qs-3wl"/>
+                <constraint firstItem="gce-A7-jVe" firstAttribute="top" secondItem="Zjy-Zg-7rF" secondAttribute="bottom" constant="40" id="T8w-au-J3f"/>
+                <constraint firstItem="fnl-2z-Ty3" firstAttribute="trailing" secondItem="gce-A7-jVe" secondAttribute="trailing" constant="20" id="eNE-KW-VKQ"/>
+                <constraint firstItem="fnl-2z-Ty3" firstAttribute="trailing" secondItem="Zjy-Zg-7rF" secondAttribute="trailing" constant="20" id="f0t-w4-Vqo"/>
+                <constraint firstItem="gce-A7-jVe" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" constant="20" id="jIf-3r-5qw"/>
+            </constraints>
             <viewLayoutGuide key="safeArea" id="fnl-2z-Ty3"/>
         </view>
     </objects>
