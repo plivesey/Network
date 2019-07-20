@@ -102,7 +102,6 @@ struct DecodableConvertible<T: Decodable>: RequiredDataConvertible {
 
     static func convert(from data: Data) throws -> DecodableConvertible<T> {
         let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
         let model = try decoder.decode(T.self, from: data)
         return DecodableConvertible(model)
     }

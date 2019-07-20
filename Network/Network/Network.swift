@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 class Network {
     static let shared = Network()
@@ -26,7 +27,7 @@ class Network {
     /**
      The session that the app uses. Since it uses delegate: self, it must be declared lazy. You should never change this.
      */
-    let session = URLSession()
+    let session = URLSession(configuration: .default)
 
     // MARK: - API
 
@@ -65,12 +66,11 @@ class Network {
     @discardableResult
     func download(_ request: Requestable,
                   destination: URL,
-                  unzip: Bool = false,
                   completion: @escaping (Result<Void, Error>)->Void) -> NetworkTask {
         return send(request,
                     taskCreator: { urlRequest, completion in self.session.downloadTask(with: urlRequest,
                                                                                        completionHandler: completion) },
-                    dataConvertor: { try self.moveFile(from: $0, to: destination) },
+                    dataConvertor: { try $0.flatMap { try self.moveFile(from: $0, to: destination) } },
                     completion: completion)
     }
 
@@ -84,10 +84,12 @@ class Network {
      */
     private func send<DataType, ReturnType>(_ request: Requestable,
                                             taskCreator: @escaping ((URLRequest, @escaping (DataType?, URLResponse?, Error?)->Void)->URLSessionTask),
-                                            dataConvertor: @escaping (DataType) throws -> ReturnType,
+                                            dataConvertor: @escaping (DataType?) throws -> ReturnType,
                                             completion: @escaping (Result<ReturnType, Error>)->Void) -> NetworkTask {
         // Create a network task to immediately return
         let networkTask = NetworkTask()
+
+        let backgroundTaskID = UIApplication.shared.beginBackgroundTask(expirationHandler: nil)
 
         // Go to a background queue as request.urlRequest() may do json parsing
         DispatchQueue.global(qos: .userInitiated).async {
@@ -103,16 +105,12 @@ class Network {
                     result = .failure(error)
                 } else if let error = self.error(from: response, with: request) {
                     result = .failure(error)
-                } else if let data = data {
+                } else {
                     do {
-                        let returnType = try dataConvertor(data)
-                        result = .success(returnType)
+                        result = .success(try dataConvertor(data))
                     } catch let error {
                         result = .failure(error)
                     }
-                } else {
-                    Log.assertFailure("Missing both data and error from NSURLSession. This should never happen.")
-                    result = .failure(NetworkError.noDataOrError)
                 }
 
                 if case let .failure(error) = result {
@@ -123,6 +121,8 @@ class Network {
 
                 DispatchQueue.main.async {
                     completion(result)
+
+                    UIApplication.shared.endBackgroundTask(backgroundTaskID)
                 }
             }
 

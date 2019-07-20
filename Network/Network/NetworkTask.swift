@@ -13,8 +13,8 @@ import Foundation
  Note: when you call cancel, the task may not yet have started. But as soon as it does start, it will immediately cancel.
  */
 class NetworkTask {
-    var task: URLSessionTask?
-    var cancelled = false
+    private var task: URLSessionTask?
+    private var cancelled = false
 
     let queue = DispatchQueue(label: "com.peterlivesey.networkTask", qos: .utility)
 
