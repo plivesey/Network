@@ -24,7 +24,7 @@ class SimpleNetwork {
     }
 
     /**
-     The session that the app uses. Since it uses delegate: self, it must be declared lazy. You should never change this.
+     The session that the app uses.
      */
     let session: URLSession = URLSession()
 
