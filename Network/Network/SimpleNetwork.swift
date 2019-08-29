@@ -11,6 +11,8 @@ import Foundation
 class SimpleNetwork {
     static let shared = SimpleNetwork()
 
+    private let queue = DispatchQueue(label: "SimpleNetwork", qos: .userInitiated, attributes: .concurrent)
+
     enum NetworkError: Error {
         case noDataOrError
     }
@@ -39,7 +41,7 @@ class SimpleNetwork {
      */
     func send<T: Model>(_ request: Requestable, completion: @escaping (Result<T, Error>)->Void) {
         // Go to a background queue as request.urlRequest() may do json parsing
-        DispatchQueue.global(qos: .userInitiated).async {
+        queue.async {
             let urlRequest = request.urlRequest()
 
             Log.verbose("Send: \(urlRequest.url?.absoluteString ?? "") - \(urlRequest.httpMethod ?? "")")

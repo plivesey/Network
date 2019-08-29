@@ -48,7 +48,6 @@ struct Request: Requestable {
  */
 struct PostRequest<Model: Encodable>: Requestable {
     let path: String
-    let method: String
     let model: Model
 
     func urlRequest() -> URLRequest {
@@ -58,7 +57,7 @@ struct PostRequest<Model: Encodable>: Requestable {
         }
 
         var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = method
+        urlRequest.httpMethod = "POST"
 
         do {
             let encoder = JSONEncoder()

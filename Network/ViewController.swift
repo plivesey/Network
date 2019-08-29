@@ -30,7 +30,7 @@ class ViewController: UIViewController {
         label.text = "Loading..."
 
         let newUser = User(id: 2, name: "Peter", username: "Livesey", email: "941ecfff8dc3@medium.com")
-        let request = PostRequest(path: "/users", method: "POST", model: newUser)
+        let request = PostRequest(path: "/users", model: newUser)
         Network.shared.send(request) { (result: Result<Empty, Error>) in
             switch result {
             case .success:

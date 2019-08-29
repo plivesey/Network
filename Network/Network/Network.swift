@@ -12,6 +12,8 @@ import UIKit
 class Network {
     static let shared = Network()
 
+    private let queue = DispatchQueue(label: "Network", qos: .userInitiated, attributes: .concurrent)
+
     enum NetworkError: Error {
         case noDataOrError
     }
@@ -92,7 +94,7 @@ class Network {
         let backgroundTaskID = UIApplication.shared.beginBackgroundTask(expirationHandler: nil)
 
         // Go to a background queue as request.urlRequest() may do json parsing
-        DispatchQueue.global(qos: .userInitiated).async {
+        queue.async {
             let urlRequest = request.urlRequest()
 
             let urlToLog = urlRequest.url?.absoluteString ?? ""
